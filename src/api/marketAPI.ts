@@ -1,39 +1,44 @@
-import { http } from './http';
+import { http } from './http' // your axios instance
 
-// Generic helper if you want to reuse it elsewhere
-async function getJson<T = unknown>(
-  path: string,
-  params?: Record<string, string | number | boolean | undefined>
-): Promise<T> {
-  const { data } = await http.get<T>(path, { params });
-  return data;
+export type RealtimeQuote = {
+  meta: {
+    version: string
+    status: number
+    copywrite: string
+  }
+  body: {
+    symbol: string
+    companyName: string
+    stockType: string
+    exchange: string
+    primaryData: {
+      lastSalePrice: string
+      netChange: string
+      percentageChange: string
+      deltaIndicator: string
+      lastTradeTimestamp: string
+      isRealTime: boolean
+      bidPrice: string
+      askPrice: string
+      bidSize: string
+      askSize: string
+      volume: string
+      currency: string | null
+    }
+    secondaryData: Record<string, unknown>
+    marketStatus: string
+    assetClass: string
+    keyStats: Record<string, { label: string; value: string }>
+  }
 }
 
-// --- Examples you can call from the UI ---
-
-// v1/market/tickers
-export function fetchMarketTickers() {
-  return getJson<unknown>('/api/v1/market/tickers', { limit: 50 });
-}
-
-// v1/market/quotes (real-time)
-export function fetchMarketQuotesRealtime() {
-  return getJson<unknown>('/api/v1/market/quotes', { symbols: 'AAPL,MSFT,TSLA' });
-}
-
-// v1/insider-trades  (what you tested earlier)
-export function fetchInsiderTradesDump() {
-  return getJson<unknown>('/api/v1/insider-trades', { limit: 100, page: 1 });
-}
-
-// You can add more later, e.g. v1/stock/profile, v1/market/news, etc.
-
-export function fetchRealtimeQuoteSingle(
+export async function fetchRealtimeQuoteSingle(
   ticker: string,
   type: 'STOCKS' | 'ETF' | 'MUTUALFUNDS' = 'STOCKS'
-) {
-  // NOTE the singular path: /api/v1/markets/quote
-  return http.get<unknown>('/api/v1/markets/quote', {
-    params: { ticker, type },
-  }).then(r => r.data);
+): Promise<RealtimeQuote> {
+  const { data } = await http.get<RealtimeQuote>(
+    '/api/v1/markets/quote',
+    { params: { ticker, type } }
+  )
+  return data
 }
